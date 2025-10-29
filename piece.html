@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>Fragment QR</title>
+<style>
+  body { font-family: Arial, sans-serif; text-align:center; padding:30px; }
+  #finalQR { display:none; margin-top:20px; width:260px; max-width:80%; }
+  #progress { margin-top:15px; font-size:18px; }
+  #board { margin-top:10px; font-size:24px; letter-spacing:6px; line-height:1.4em; }
+  button { margin-top:12px; padding:8px 14px; }
+</style>
+</head>
+<body>
+
+<h1>Gratulacje — odkryłeś fragment!</h1>
+<p id="progress">Sprawdzam postęp...</p>
+<div id="board"></div>
+
+<img id="finalQR"
+     src="https://drive.google.com/uc?export=view&id=DRIVE_FILE_ID"
+     alt="Pełny QR">
+
+<div>
+  <button id="resetBtn">🔄 Resetuj postęp</button>
+</div>
+
+<script>
+// ========== KONFIGURACJA ==========
+const correctFragments = ["1","2","3","4","5","6","7","8","9"];
+const requiredCount = correctFragments.length;
+
+// ========== FUNKCJE ==========
+function renderBoard(collected) {
+  let html = "";
+  for (let i=1; i<=requiredCount; i++) {
+    html += collected.includes(i.toString()) ? "🟩" : "⬛";
+    if (i % 3 === 0) html += "<br>";
+  }
+  document.getElementById("board").innerHTML = html;
+}
+
+function updateUI(collected) {
+  renderBoard(collected);
+  const progress = document.getElementById("progress");
+  const finalQR = document.getElementById("finalQR");
+
+  if (collected.length >= requiredCount) {
+    progress.innerText = "🎉 Brawo! Zebrałeś wszystkie fragmenty!";
+    finalQR.style.display = "block";
+  } else {
+    progress.innerText = `Zebrane fragmenty: ${collected.length}/${requiredCount}`;
+    finalQR.style.display = "none";
+  }
+}
+
+// ========== GŁÓWNA LOGIKA ==========
+let collected = JSON.parse(localStorage.getItem("collected") || "[]");
+
+const urlParams = new URLSearchParams(window.location.search);
+const fragment = urlParams.get("f");
+
+// Dodanie fragmentu jeśli poprawny
+if (fragment && correctFragments.includes(fragment)) {
+  if (!collected.includes(fragment)) {
+    collected.push(fragment);
+    localStorage.setItem("collected", JSON.stringify(collected));
+  }
+}
+
+// Odśwież interfejs
+updateUI(collected);
+
+// Resetowanie postępu
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (confirm("Na pewno zresetować postęp?")) {
+    localStorage.removeItem("collected");
+    collected = [];
+    updateUI(collected);
+  }
+});
+</script>
+
+</body>
+</html>
